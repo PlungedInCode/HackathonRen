@@ -25,6 +25,7 @@ class Bot:
         self.bot.add_handler(CommandHandler(bot_messages.HISTORY_CMD, self.history))
         self.bot.add_handler(CommandHandler(bot_messages.LOGIN_CMD, self.login))
         self.bot.add_handler(CommandHandler(bot_messages.STATS_CMD, self.stats))
+        self.bot.add_handler(CommandHandler(bot_messages.TRANSFER_CMD, self.transfer))
 
     async def register(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data = context.args
@@ -46,7 +47,7 @@ class Bot:
                 await context.bot.send_message(chat_id=update.effective_chat.id,
                                                text=bot_messages.ALREADY_LOGIN_USER_MSG)
             # await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.SUCCESS_LOGIN_MSG)
-            elif self.db.login_user(user_data[1], int(user_data[0])):
+            elif self.db.login_user(user_data[1], user_data[0]):
                 self.login_card_number = int(user_data[0])
                 await update.message.reply_text(bot_messages.set_login_success_msg(int(user_data[0])))
             else:
@@ -73,7 +74,7 @@ class Bot:
 
     async def balance(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if self.login_card_number != -1:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text="On your account X rubles")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=f"On your account {self..user.balace} rubles")
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED)
 

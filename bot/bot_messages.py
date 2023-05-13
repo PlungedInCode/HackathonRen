@@ -8,7 +8,7 @@ QUIT_CMD = "quit"
 STATS_CMD = "stats"
 
 WRONG_LOGIN_INPUT_MSG = "Please enter correct data [card_number, password]"
-WRONG_LOGINING_MSG = "Incorrect password or number of card"
+WRONG_LOGINING_MSG = "Incorrect password or login"
 ALREADY_EXISTS_USER_MSG = "User already exist"
 SUCCESS_LOGIN = "Logining success"
 ALREADY_LOGIN_USER_MSG = "You already logged"
