@@ -9,18 +9,19 @@ REPEAT_CMD = "repeat"
 
 WRONG_LOGIN_INPUT_MSG = "Введите корректные данные в формате: <логин>, <пароль>"
 WRONG_LOGINING_MSG = "Некорректный логин или пароль"
-SUCCESS_LOGIN = "Вы успешно вошли.\n" \
+SUCCESS_LOGIN_MSG = "Вы успешно вошли.\n" \
                 "В целях безопасности, через 15 минут автоматически будет произведен выход и аккаунта"
 ALREADY_LOGIN_USER_MSG = "Вы уже в аккаунте"
 QUIT_SUCCESSFUL_MSG = "Вы успешно вышли"
 NOT_ALREADY_LOGING_MSG = "Вы не в аккаунте"
 TRANSFER_INPUT_ERROR_MSG = "Введите корректные данные в формате: <card_number>, <transfer_sum>"
-NOT_AUTHORIZED = "В начале надо войти в аккаунт"
+NOT_AUTHORIZED_MSG = "В начале надо войти в аккаунт"
 USER_DOES_NOT_EXIST = "Пользователя с таким логином не существует"
 INPUT_CONFIRMATION_CODE = "На Ваш номер был отправлен СМС с кодом подтверждения, введите его"
 WRONG_CONFIRMATION_CODE_MSG = "Неверный код"
-WRONG_REPEAT = "Вы переслали неверное сообщение, можно повторить только операцию transfer"
-ISNT_REPLY_MESSAGE = "Команду repeat можно применять только для пересылаемых сообщений"
+TRANSFER_ON_YOUR_CARD_ERROR_MSG = "Вы не можете выполнить перевод на свою же карту"
+WRONG_REPEAT_MSG = "Вы переслали неверное сообщение, можно повторить только операцию transfer"
+ISNT_REPLY_MESSAGE_MSG = "Команду repeat можно применять только для пересылаемых сообщений"
 
 START_MSG = "Я - бот РенесансКредит.\n" \
             "Здесь ты можешь посмотреть баланс, историю переводов и статистику, выполнить перевод," \

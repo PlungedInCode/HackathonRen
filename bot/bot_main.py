@@ -35,7 +35,7 @@ class Bot:
                 input_code = int(update.message.text.strip())
                 if input_code == confirmation_code_data[0]:
                     context.user_data["user"] = confirmation_code_data[1]
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.SUCCESS_LOGIN)
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.SUCCESS_LOGIN_MSG)
                 else:
                     await context.bot.send_message(chat_id=update.effective_chat.id,
                                                    text=bot_messages.WRONG_CONFIRMATION_CODE_MSG)
@@ -83,6 +83,10 @@ class Bot:
                 await context.bot.send_message(chat_id=update.effective_chat.id,
                                                text=bot_messages.TRANSFER_INPUT_ERROR_MSG)
                 return
+            if to_card == user.card_number:
+                await context.bot.send_message(chat_id=update.effective_chat.id,
+                                               text=bot_messages.TRANSFER_ON_YOUR_CARD_ERROR_MSG)
+                return
             if self.db.is_user_exists(card_number=message_args[0]):
                 self.db.change_balance(user, to_card, balance_changing)
                 await context.bot.send_message(chat_id=update.effective_chat.id,
@@ -98,7 +102,7 @@ class Bot:
             await context.bot.send_message(chat_id=update.effective_chat.id,
                                            text=bot_messages.balance_msg(user.balance))
         else:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
 
     async def history(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.get_history(history=history))
@@ -127,7 +131,7 @@ class Bot:
             if update.message.reply_to_message:
                 msg = update.message.reply_to_message.text.split()
                 if msg[0] != '/transfer':
-                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.WRONG_REPEAT)
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.WRONG_REPEAT_MSG)
                     return
                 msg = msg[1:]
                 try:
@@ -137,7 +141,6 @@ class Bot:
                     await context.bot.send_message(chat_id=update.effective_chat.id,
                                                    text=bot_messages.TRANSFER_INPUT_ERROR_MSG)
                     return
-                print(to_card, balance_changing)
                 if self.db.is_user_exists(card_number=to_card):
                     self.db.change_balance(user, to_card, balance_changing)
                     await context.bot.send_message(chat_id=update.effective_chat.id,
@@ -146,9 +149,9 @@ class Bot:
                     await context.bot.send_message(chat_id=update.effective_chat.id,
                                                    text=bot_messages.USER_DOES_NOT_EXIST)
             else:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.ISNT_REPLY_MESSAGE)
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.ISNT_REPLY_MESSAGE_MSG)
         else:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
 
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
