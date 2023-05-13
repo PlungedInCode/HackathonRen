@@ -41,6 +41,7 @@ class Database:
                             .where(User.card_number == to_card)
                             .values(balance=User.balance + balance_changing))
             session.commit()
+            session.refresh(user)
 
     @staticmethod
     def get_db_engine() -> Engine:
