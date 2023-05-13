@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, Float
 
 Base = declarative_base()
 
+
 # Пишем тут модель
 class User(Base):
     __tablename__ = "user"
@@ -12,4 +13,3 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(200))
     login: Mapped[str] = mapped_column(String(200))
     password: Mapped[str] = mapped_column(String(200))
-    # balance : Mapped[Float] = mapped_column(Float(), default=1000)

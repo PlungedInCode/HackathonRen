@@ -28,6 +28,12 @@ class Database:
             return session.scalar(exists(User)
                                   .where(User.password == password, User.card_number == card_number)
                                   .select())
+    def change_balance(self, card_number: int, balance_changing: int) -> None:
+        with Session(self.engine) as session:
+            session.execute(update(User)
+                            .where(User.card_number == card_number)
+                            .values(balance=User.balance + balance_changing))
+            session.commit()
 
     @staticmethod
     def get_db_engine() -> Engine:

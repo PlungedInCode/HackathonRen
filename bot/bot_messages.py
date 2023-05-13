@@ -1,5 +1,6 @@
 START_CMD = "start"
 REGISTER_CMD = "register"
+TRANSFER_CMD = "transfer"
 BALANCE_CMD = "balance"
 HISTORY_CMD = "history"
 LOGIN_CMD = "login"
@@ -14,6 +15,8 @@ ALREADY_LOGIN_USER_MSG = "You already logged"
 QUIT_SUCCESSFUL_MSG = "Quit successful"
 NOT_ALREADY_LOGING_NSG = "You are not already loging"
 INCORRECT_INPUT_MSG = "Please enter correct data [card_number, name, login, password]"
+TRANSFER_SUCCESSFUL_MSG = "Transfer is successful"
+TRANSFER_INPUT_ERROR_MSG = "Please enter correct data [card_number, transfer_sum]"
 NOT_AUTHORIZED = "Please authorize first"
 
 HELLO_MSG = "Hello World!"
@@ -28,6 +31,6 @@ def get_history(history):
         result += i
         result += '\n'
     return result
-
+  
 def set_login_success_msg(login):
     return f"{login} login success"
