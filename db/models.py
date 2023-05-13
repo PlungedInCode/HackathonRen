@@ -13,4 +13,3 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(200))
     login: Mapped[str] = mapped_column(String(200))
     password: Mapped[str] = mapped_column(String(200))
-    balance: Mapped[int] = mapped_column(Integer())
