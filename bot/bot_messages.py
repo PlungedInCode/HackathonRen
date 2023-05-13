@@ -5,6 +5,7 @@ HISTORY_CMD = "history"
 LOGIN_CMD = "login"
 QUIT_CMD = "quit"
 STATS_CMD = "stats"
+REPEAT_CMD = "repeat"
 
 WRONG_LOGIN_INPUT_MSG = "Введите корректные данные в формате: <логин>, <пароль>"
 WRONG_LOGINING_MSG = "Некорректный логин или пароль"
@@ -18,6 +19,8 @@ NOT_AUTHORIZED = "В начале надо войти в аккаунт"
 USER_DOES_NOT_EXIST = "Пользователя с таким логином не существует"
 INPUT_CONFIRMATION_CODE = "На Ваш номер был отправлен СМС с кодом подтверждения, введите его"
 WRONG_CONFIRMATION_CODE_MSG = "Неверный код"
+WRONG_REPEAT = "Вы переслали неверное сообщение, можно повторить только операцию transfer"
+ISNT_REPLY_MESSAGE = "Команду repeat можно применять только для пересылаемых сообщений"
 
 START_MSG = "Я - бот РенесансКредит.\n" \
             "Здесь ты можешь посмотреть баланс, историю переводов и статистику, выполнить перевод," \
