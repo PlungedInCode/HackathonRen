@@ -1,7 +1,8 @@
 import datetime
 import matplotlib.pyplot as plt
 
-def generate_stats_by_month(month, history):    
+
+def generate_stats_by_month(month, history):
     dates = []
     result = []
     cur_sum = 0
@@ -19,7 +20,6 @@ def generate_stats_by_month(month, history):
         
         result.append(cur_sum)
         dates.append(date)
-
 
     plt.plot(dates, result, label='Income/Expense')
     plt.xlabel('Дата')
