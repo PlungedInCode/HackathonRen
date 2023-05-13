@@ -24,6 +24,7 @@ class Bot:
         self.bot.add_handler(CommandHandler(bot_messages.STATS_CMD, self.stats))
         self.bot.add_handler(CommandHandler(bot_messages.TRANSFER_CMD, self.transfer))
 
+
     async def login(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_args = context.args
         if len(message_args) == 2:
