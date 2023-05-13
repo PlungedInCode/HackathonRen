@@ -20,12 +20,22 @@ class Database:
     def save_user(self, user_data: list[str]) -> None:
         with Session(self.engine) as session:
             session.add(
-                User(card_number=int(user_data[0]), name=user_data[1], login=user_data[2], password=user_data[3]))
+                User(card_number=int(user_data[0]), name=user_data[1], login=user_data[2], password=user_data[3],
+                     balance=1000))
             session.commit()
 
-    # def login_user(self, password : str, card_number: int)-> None:
-    #     with Session(self.engine) as session:
-    #         return session.scalar(exists(User).where(User.password == password, User.card_number == card_number))
+    def login_user(self, password: str, card_number: int) -> None:
+        with Session(self.engine) as session:
+            return session.scalar(exists(User)
+                                  .where(User.password == password, User.card_number == card_number)
+                                  .select())
+
+    def change_balance(self, card_number: int, balance_changing: int) -> None:
+        with Session(self.engine) as session:
+            session.execute(update(User)
+                            .where(User.card_number == card_number)
+                            .values(balance=User.balance + balance_changing))
+            session.commit()
 
     @staticmethod
     def get_db_engine() -> Engine:
