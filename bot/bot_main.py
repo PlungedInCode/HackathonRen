@@ -26,6 +26,7 @@ class Bot:
         self.bot.add_handler(CommandHandler(bot_messages.LOGIN_CMD, self.login))
         self.bot.add_handler(CommandHandler(bot_messages.STATS_CMD, self.stats))
         self.bot.add_handler(CommandHandler(bot_messages.TRANSFER_CMD, self.transfer))
+        self.bot.add_handler(CommandHandler(bot_messages.REPEAT_CMD, self.repeat))
         self.bot.add_handler(MessageHandler(BaseFilter(), self.check_confirmation_code))
 
     async def check_confirmation_code(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -123,6 +124,35 @@ class Bot:
     async def send_sms_confirmation(self, code: int):
         print(code)
         pass
+
+    async def repeat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = context.user_data.get("user")
+        if user:
+            if update.message.reply_to_message:
+                msg = update.message.reply_to_message.text.split()
+                if msg[0] != '/transfer':
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.WRONG_REPEAT)
+                    return
+                msg = msg[1:]
+                try:
+                    to_card = int(msg[0])
+                    balance_changing = int(msg[1])
+                except ValueError:
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text=bot_messages.TRANSFER_INPUT_ERROR_MSG)
+                    return
+                print(to_card, balance_changing)
+                if self.db.is_user_exists(card_number=to_card):
+                    self.db.change_balance(user, to_card, balance_changing)
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text=bot_messages.transfer_success_msg(to_card))
+                else:
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text=bot_messages.USER_DOES_NOT_EXIST)
+            else:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.ISNT_REPLY_MESSAGE)
+        else:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED)
 
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
