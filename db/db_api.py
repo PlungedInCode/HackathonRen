@@ -29,6 +29,10 @@ class Database:
                                   .where(User.login == login)
                                   .where(User.password == password))
 
+    def is_login_data_correct(self, login: str, password: str):
+        with Session(self.engine) as session:
+            return session.scalar(exists(User).where(User.login == login).where(User.password == password).select())
+
     def change_balance(self, user: User, to_card: int, balance_changing: int) -> None:
         with Session(self.engine) as session:
             user.balance -= balance_changing

@@ -1,11 +1,14 @@
 import os
+import asyncio
+import random
 
 from telegram import Update
-from telegram.ext import Application, ContextTypes, CommandHandler
+from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandler
+from telegram.ext.filters import BaseFilter
+
 from bot import bot_messages
 from db.db_api import Database
 from bot.stats import generate_stats_by_month
-
 
 history = ['Income 25.03.2023 100', 'Income 26.03.2023 200', 'Expense 27.03.2023 150']
 
@@ -23,7 +26,24 @@ class Bot:
         self.bot.add_handler(CommandHandler(bot_messages.LOGIN_CMD, self.login))
         self.bot.add_handler(CommandHandler(bot_messages.STATS_CMD, self.stats))
         self.bot.add_handler(CommandHandler(bot_messages.TRANSFER_CMD, self.transfer))
+        self.bot.add_handler(MessageHandler(BaseFilter(), self.check_confirmation_code))
 
+    async def check_confirmation_code(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if confirmation_code_data := context.user_data.get("confirmation_code_data"):
+            try:
+                input_code = int(update.message.text.strip())
+                if input_code == confirmation_code_data[0]:
+                    context.user_data["user"] = confirmation_code_data[1]
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.SUCCESS_LOGIN)
+                else:
+                    await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                   text=bot_messages.WRONG_CONFIRMATION_CODE_MSG)
+            except ValueError:
+                await context.bot.send_message(chat_id=update.effective_chat.id,
+                                               text=bot_messages.WRONG_CONFIRMATION_CODE_MSG)
+            context.user_data.pop("confirmation_code_data")
+        else:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.START_MSG)
 
     async def login(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_args = context.args
@@ -32,8 +52,11 @@ class Bot:
                 await context.bot.send_message(chat_id=update.effective_chat.id,
                                                text=bot_messages.ALREADY_LOGIN_USER_MSG)
             elif user := self.db.login_user(message_args[0], message_args[1]):
-                context.user_data["user"] = user
-                await update.message.reply_text(bot_messages.set_login_success_msg(int(message_args[0])))
+                confirmation_code = random.randint(100000, 999999)
+                context.user_data["confirmation_code_data"] = [confirmation_code, user]
+                await self.send_sms_confirmation(confirmation_code)
+                await context.bot.send_message(chat_id=update.effective_chat.id,
+                                               text=bot_messages.INPUT_CONFIRMATION_CODE)
             else:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.WRONG_LOGINING_MSG)
         else:
@@ -72,7 +95,7 @@ class Bot:
         user = context.user_data.get("user")
         if user:
             await context.bot.send_message(chat_id=update.effective_chat.id,
-                                           text=f"On your account {user.balance} rubles")
+                                           text=bot_messages.balance_msg(user.balance))
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED)
 
@@ -89,6 +112,14 @@ class Bot:
         else:
             pass
 
+    async def delay_quit(self, delay: int, context: ContextTypes.DEFAULT_TYPE):
+        await asyncio.sleep(delay)
+        context.user_data.pop("user")
+
+    async def send_sms_confirmation(self, code: int):
+        print(code)
+        pass
+
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.START_CMD)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.START_MSG)
