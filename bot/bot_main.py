@@ -83,7 +83,7 @@ class Bot:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_ALREADY_LOGING_MSG)
         elif len(message_args) == 2:
             try:
-                to_card = int(message_args[0])
+                to_card = message_args[0]
                 balance_changing = int(message_args[1])
             except ValueError:
                 await context.bot.send_message(chat_id=update.effective_chat.id,
@@ -120,9 +120,22 @@ class Bot:
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
 
-    @staticmethod
-    async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.get_history(history=history))
+    async def history(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = context.user_data.get("user")
+        if user:
+            operations = self.db.get_all_operations(context.user_data["user"], 5)
+            message = f"Последние {min(len(operations), 5)} операций:\n"
+            for i in range(min(len(operations), 5)):
+                if user.card_number == operations[i].from_user.card_number:
+                    message += f"Перевод на карту {operations[i].to_user.card_number} " \
+                               f"на сумму {operations[i].amount} рублей\n"
+                else:
+                    message += f"Пополнение с карты {operations[i].from_user.card_number} " \
+                               f"на сумму {operations[i].amount} рублей\n"
+
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+        else:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
 
     @staticmethod
     async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -173,7 +186,7 @@ class Bot:
 
         if query_data[0] == bot_messages.TRANSFER_SERVICE_ACCEPTED_CB and user:
             try:
-                to_card = int(query_data[2])
+                to_card = query_data[2]
                 amount = int(query_data[3])
             except ValueError:
                 await update.callback_query.edit_message_text(bot_messages.WRONG_TRANSFER_INPUT_MSG)
@@ -203,7 +216,7 @@ class Bot:
                     return
                 msg = msg[1:]
                 try:
-                    to_card = int(msg[0])
+                    to_card = msg[0]
                     balance_changing = int(msg[1])
                 except ValueError:
                     await context.bot.send_message(chat_id=update.effective_chat.id,

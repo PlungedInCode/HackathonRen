@@ -43,10 +43,10 @@ START_MSG = "Я - бот РенесансКредит\n" \
 
 
 def balance_msg(balance: int) -> str:
-    return f"Ваш баланс {balance}"
+    return f"Ваш баланс {balance} рублей"
 
 
-def transfer_success_msg(to_card: int) -> str:
+def transfer_success_msg(to_card: str) -> str:
     return f"Перевод на карту {to_card} выполнен"
 
 
