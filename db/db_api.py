@@ -1,17 +1,18 @@
 import os
+import time
 
-from sqlalchemy import Engine, create_engine, exists, select, update, delete
-from sqlalchemy.orm import Session
+from sqlalchemy import Engine, create_engine, exists, select, update, delete, or_
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy_utils import database_exists, create_database
 
-from db.models import Base, User
+from db.models import Base, User, Transfer
 
 
 class Database:
     def __init__(self):
         self.engine = self.get_db_engine()
 
-    def is_user_exists(self, login: str = None, card_number: int = None) -> bool:
+    def is_user_exists(self, login: str = None, card_number: str = None) -> bool:
         with Session(self.engine) as session:
             if login:
                 return session.scalar(exists(User).where(User.login == login).select())
@@ -33,15 +34,33 @@ class Database:
         with Session(self.engine) as session:
             return session.scalar(exists(User).where(User.login == login).where(User.password == password).select())
 
-    def change_balance(self, user: User, to_card: int, balance_changing: int) -> None:
+    def change_balance(self, from_user: User, to_card: str, balance_changing: int) -> None:
         with Session(self.engine) as session:
-            user.balance -= balance_changing
-            session.add(user)
-            session.execute(update(User)
-                            .where(User.card_number == to_card)
-                            .values(balance=User.balance + balance_changing))
+            from_user.balance -= balance_changing
+            session.add(from_user)
+            to_user = session.scalar(select(User)
+                                     .where(User.card_number == to_card))
+            to_user.balance += balance_changing
+            session.add(to_user)
+            session.add(Transfer(from_user=from_user, to_user=to_user, amount=balance_changing, time=time.time()))
             session.commit()
-            session.refresh(user)
+            session.refresh(from_user)
+            session.refresh(to_user)
+
+    def get_all_operations(self, user: User, limit: int):
+        with Session(self.engine) as session:
+            raw_operations = session.scalars(select(Transfer).order_by(Transfer.time.desc())
+                                             .where(or_(Transfer.from_user == user, Transfer.to_user == user))
+                                             .options(joinedload(Transfer.from_user))
+                                             .options(joinedload(Transfer.to_user)))
+            operations = []
+            for num, operation in enumerate(raw_operations):
+                if num == limit:
+                    break
+                operations.append(operation)
+                session.refresh(operation.to_user)
+                session.refresh(operation.from_user)
+            return operations
 
     @staticmethod
     def get_db_engine() -> Engine:

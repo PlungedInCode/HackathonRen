@@ -23,3 +23,4 @@ class Transfer(Base):
     to_user: Mapped["User"] = relationship("User", foreign_keys=[to_user_id])
     time: Mapped[int] = mapped_column(Integer())
     amount: Mapped[int] = mapped_column(Integer())
+
