@@ -12,6 +12,8 @@ NO_MSG = 'Нет'
 
 TRANSFER_SERVICE_ACCEPTED_CB = 'transfer_accepted'
 TRANSFER_SERVICE_CANCELED_CB = 'transfer_canceled'
+PAYMENT_SERVICE_ACCEPTED_CB = 'payment_accepted'
+PAYMENT_SERVICE_CANCELED_CB = 'payment_canceled'
 
 WRONG_LOGIN_INPUT_MSG = "Введите данные в формате: <логин>, <пароль>"
 WRONG_LOGINING_MSG = "Неверный логин или пароль"
@@ -60,3 +62,7 @@ def get_history(history):
 
 def send_confirm(to_card: str, amount: str):
     return f"Вы хотите отправить {to_card} {amount}?"
+
+
+def payment_confirm(amount: str):
+    return f"Сгенерировать форму для платежа на {amount}?"

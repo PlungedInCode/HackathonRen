@@ -159,6 +159,14 @@ class Bot:
                     context.user_data["user"].name, query[0], query[1]
                 ))
             )
+            ,InlineQueryResultArticle(
+                id='2',
+                title='Получить',
+                input_message_content=InputTextMessageContent(bot_messages.payment_confirm(query[0])),
+                reply_markup=InlineKeyboardMarkup(self.gen_payment_inline_buttons(
+                    context.user_data["user"].name, query[0]
+                ))
+            )
         ]
 
         await context.bot.answer_inline_query(update.inline_query.id, results)
@@ -168,6 +176,10 @@ class Bot:
         from_user = query_data[1]
         await update.callback_query.answer()
         user = context.user_data.get("user")
+
+        # if query_data[0] == bot_messages.PAYMENT_SERVICE_ACCEPTED_CB or query_data[0] == bot_messages.PAYMENT_SERVICE_CANCELED_CB:
+        #     from_user, user = user, from_user
+        
         if not user or from_user != user.name:
             return
 
@@ -192,6 +204,19 @@ class Bot:
             await update.callback_query.edit_message_text(bot_messages.NOT_AUTHORIZED_MSG)
         elif query_data[0] == bot_messages.TRANSFER_SERVICE_CANCELED_CB:
             await update.callback_query.edit_message_text(bot_messages.CANCELED_TRANSFER_MSG)
+        elif query_data[0] == bot_messages.PAYMENT_SERVICE_ACCEPTED_CB:
+            try:
+                user_card_number = user.card_number
+                amount = int(query_data[2])
+            except ValueError:
+                await update.callback_query.edit_message_text(bot_messages.WRONG_TRANSFER_INPUT_MSG)
+                return
+            
+            # await update.callback_query.InlineKeyboardMarkup
+            await update.message.reply_text(f"pay {amount}",
+                                                reply_markup=InlineKeyboardMarkup(self._delete_service_keyboard))
+        # elif query_data[0] == bot_messages.PAYMENT_SERVICE_CANCELED_CB:
+        #     pass
 
     async def repeat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = context.user_data.get("user")
@@ -239,6 +264,17 @@ class Bot:
             InlineKeyboardButton(bot_messages.NO_MSG, callback_data=' '.join(
                 [bot_messages.TRANSFER_SERVICE_CANCELED_CB, username, to_card, amount]
             )),
+        ]]
+
+    @staticmethod
+    def gen_payment_inline_buttons(username, amount):
+        return [[
+            InlineKeyboardButton(bot_messages.YES_MSG, callback_data=' '.join(
+                [bot_messages.PAYMENT_SERVICE_ACCEPTED_CB, username, amount]
+            )),
+            InlineKeyboardButton(bot_messages.NO_MSG, callback_data=' '.join(
+                [bot_messages.PAYMENT_SERVICE_CANCELED_CB, username, amount]
+            ))
         ]]
 
     @staticmethod
