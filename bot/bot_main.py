@@ -30,6 +30,7 @@ class Bot:
         self.bot.add_handler(CommandHandler(bot_messages.STATS_CMD, self.stats))
         self.bot.add_handler(CommandHandler(bot_messages.TRANSFER_CMD, self.transfer))
         self.bot.add_handler(CommandHandler(bot_messages.REPEAT_CMD, self.repeat))
+        self.bot.add_handler(CommandHandler(bot_messages.HELP_CMD, self.help))
         self.bot.add_handler(MessageHandler(BaseFilter(), self.check_confirmation_code))
         self.bot.add_handler(CallbackQueryHandler(self.button_handler))
         self.bot.add_handler(InlineQueryHandler(self.inline_transfer))
@@ -257,3 +258,7 @@ class Bot:
     @staticmethod
     async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.START_MSG)
+
+    @staticmethod
+    async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.HELP_MSG)

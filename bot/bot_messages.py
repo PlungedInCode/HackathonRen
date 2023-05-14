@@ -6,6 +6,7 @@ LOGIN_CMD = "login"
 QUIT_CMD = "quit"
 STATS_CMD = "stats"
 REPEAT_CMD = "repeat"
+HELP_CMD = "help"
 
 YES_MSG = 'Да'
 NO_MSG = 'Нет'
@@ -40,6 +41,14 @@ NOT_ENOUGH_MONEY_MSG = "Недостаточно средств"
 START_MSG = "Я - бот РенесансКредит\n" \
             "Здесь ты можешь посмотреть баланс, историю переводов и статистику, выполнить перевод," \
             "а также получать уведомления об операциях"
+HELP_MSG = "/login <логин> <пароль> - войти в аккаунт банка\n" \
+           "/transfer <номер карты> <сумма> - выполнить перевод\n" \
+           "/balance - проверить баланс\n" \
+           "/history - получить последние операции\n" \
+           "/stats <номер месяца> - получить статистику баланса за месяц\n" \
+           "/repeat - повторить перевод\n" \
+           "/quit - выйти из аккаунта банка\n" \
+           "/help - просмотр доступных команд\n"
 
 
 def balance_msg(balance: int) -> str:
@@ -48,14 +57,6 @@ def balance_msg(balance: int) -> str:
 
 def transfer_success_msg(to_card: str) -> str:
     return f"Перевод на карту {to_card} выполнен"
-
-
-def get_history(history):
-    result = ""
-    for i in history:
-        result += i
-        result += '\n'
-    return result
 
 
 def send_confirm(to_card: str, amount: str):
