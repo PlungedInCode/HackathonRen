@@ -75,14 +75,15 @@ class Bot:
             context.user_data.pop("user")
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.QUIT_SUCCESSFUL_MSG)
         else:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_ALREADY_LOGING_MSG)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
 
     async def transfer(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_args = context.args
         user = context.user_data.get("user")
         if not user:
-            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_ALREADY_LOGING_MSG)
+            await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.NOT_AUTHORIZED_MSG)
         elif len(message_args) == 2:
+            user = self.db.login_user(user.login, user.password)
             try:
                 to_card = message_args[0]
                 balance_changing = int(message_args[1])
@@ -112,10 +113,10 @@ class Bot:
         else:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=bot_messages.TRANSFER_INPUT_ERROR_MSG)
 
-    @staticmethod
-    async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def balance(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = context.user_data.get("user")
         if user:
+            user = self.db.login_user(user.login, user.password)
             await context.bot.send_message(chat_id=update.effective_chat.id,
                                            text=bot_messages.balance_msg(user.balance))
         else:
@@ -124,6 +125,7 @@ class Bot:
     async def history(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = context.user_data.get("user")
         if user:
+            user = self.db.login_user(user.login, user.password)
             operations = self.db.get_all_operations(context.user_data["user"], 5)
             message = f"Последние {min(len(operations), 5)} операций:\n"
             for i in range(min(len(operations), 5)):
@@ -157,23 +159,33 @@ class Bot:
     @staticmethod
     async def send_sms_confirmation(code: int):
         print(code)
-        pass
 
     async def inline_transfer(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.inline_query.query.split()
-        if len(query) < 2 or not context.user_data.get("user"):
+        if len(query) < 1 or not context.user_data.get("user"):
             return
-
-        results = [
-            InlineQueryResultArticle(
-                id='1',
-                title='Перевести',
-                input_message_content=InputTextMessageContent(bot_messages.send_confirm(query[0], query[1])),
-                reply_markup=InlineKeyboardMarkup(self.gen_inline_buttons(
-                    context.user_data["user"].name, query[0], query[1]
-                ))
-            )
-        ]
+        elif len(query) == 1:
+            results = [
+                InlineQueryResultArticle(
+                    id='2',
+                    title='Получить',
+                    input_message_content=InputTextMessageContent(bot_messages.payment_confirm(query[0])),
+                    reply_markup=InlineKeyboardMarkup(self.gen_payment_inline_buttons(
+                        context.user_data["user"].name, context.user_data["user"].card_number, query[0],
+                    ))
+                )
+            ]
+        else:
+            results = [
+                InlineQueryResultArticle(
+                    id='1',
+                    title='Перевести',
+                    input_message_content=InputTextMessageContent(bot_messages.send_confirm(query[0], query[1])),
+                    reply_markup=InlineKeyboardMarkup(self.gen_inline_buttons(
+                        context.user_data["user"].name, query[0], query[1]
+                    ))
+                )
+            ]
 
         await context.bot.answer_inline_query(update.inline_query.id, results)
 
@@ -182,10 +194,13 @@ class Bot:
         from_user = query_data[1]
         await update.callback_query.answer()
         user = context.user_data.get("user")
-        if not user or from_user != user.name:
+
+        if not user or (from_user != user.name and query_data[0] == bot_messages.TRANSFER_SERVICE_ACCEPTED_CB) \
+                or (query_data[0] == bot_messages.PAYMENT_SERVICE_ACCEPTED_CB and from_user == user.name):
             return
 
-        if query_data[0] == bot_messages.TRANSFER_SERVICE_ACCEPTED_CB and user:
+        user = self.db.login_user(user.login, user.password)
+        if query_data[0] == bot_messages.TRANSFER_SERVICE_ACCEPTED_CB:
             try:
                 to_card = query_data[2]
                 amount = int(query_data[3])
@@ -202,14 +217,28 @@ class Bot:
                 await update.callback_query.edit_message_text(bot_messages.SUCCESSFULLY_TRANSFER_MSG)
             else:
                 await update.callback_query.edit_message_text(bot_messages.USER_DOES_NOT_EXIST)
-        elif not user:
-            await update.callback_query.edit_message_text(bot_messages.NOT_AUTHORIZED_MSG)
         elif query_data[0] == bot_messages.TRANSFER_SERVICE_CANCELED_CB:
             await update.callback_query.edit_message_text(bot_messages.CANCELED_TRANSFER_MSG)
+        elif query_data[0] == bot_messages.PAYMENT_SERVICE_ACCEPTED_CB:
+            try:
+                to_card = query_data[2]
+                amount = int(query_data[3])
+            except ValueError:
+                await update.callback_query.edit_message_text(bot_messages.WRONG_TRANSFER_INPUT_MSG)
+                return
+            
+            if user.balance < amount:
+                await update.callback_query.edit_message_text(bot_messages.NOT_ENOUGH_MONEY_MSG)
+            elif amount <= 0:
+                await update.callback_query.edit_message_text(bot_messages.WRONG_PAYMENT_INPUT_MSG)
+            else:
+                self.db.change_balance(user, to_card, amount)
+                await update.callback_query.edit_message_text(bot_messages.SUCCESSFULLY_TRANSFER_MSG)
 
     async def repeat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = context.user_data.get("user")
         if user:
+            user = self.db.login_user(user.login, user.password)
             if update.message.reply_to_message:
                 msg = update.message.reply_to_message.text.split()
                 if msg[0] != '/transfer':
@@ -252,6 +281,14 @@ class Bot:
             )),
             InlineKeyboardButton(bot_messages.NO_MSG, callback_data=' '.join(
                 [bot_messages.TRANSFER_SERVICE_CANCELED_CB, username, to_card, amount]
+            )),
+        ]]
+
+    @staticmethod
+    def gen_payment_inline_buttons(name, to_card, amount):
+        return [[
+            InlineKeyboardButton(bot_messages.PAY_MSG, callback_data=' '.join(
+                [bot_messages.PAYMENT_SERVICE_ACCEPTED_CB, name, to_card, amount]
             )),
         ]]
 
