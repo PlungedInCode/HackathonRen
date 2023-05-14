@@ -168,7 +168,7 @@ class Bot:
             results = [
                 InlineQueryResultArticle(
                     id='2',
-                    title='Получить',
+                    title='Запросить перевод',
                     input_message_content=InputTextMessageContent(bot_messages.payment_confirm(query[0])),
                     reply_markup=InlineKeyboardMarkup(self.gen_payment_inline_buttons(
                         context.user_data["user"].name, context.user_data["user"].card_number, query[0],
